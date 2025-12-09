@@ -66,6 +66,7 @@ for FAA in ${ANNOT_DIR}/*/*.faa; do
     echo "Finished BUSCO for ${SAMPLE}"
     echo
 done
+echo "=== BUSCO batch complete at $(date)! ==="
 ```
 
-echo "=== BUSCO batch complete at $(date)! ==="
+
