@@ -257,5 +257,100 @@ conda create -n orthofinder-env -y \
 source activate orthofinder-env
 ```
 
+Begin R portion of project. We must first load our data and create some preliminary trees.
 ```
+library(ape)
+library(ggtree)
+library(ggplot2)
+
+results_dir <- "/home/cjyoung42/G2_TestData/orthofinder_results/Results_Dec10"
+tree_file <- file.path(results_dir, "Species_Tree", "SpeciesTree_rooted.txt")
+t <- read.tree(tree_file)
+
+#re-root tree on X. taiwanensis, the outgroup
+t_rooted <- root(
+  t,
+  outgroup = "GCF_013177435.1_GCF_013177435.1",
+  resolve.root = TRUE)
+
+```
+```
+library(ape)
+library(ggtree)
+library(dplyr)
+library(stringr)
+
+# set paths
+tree_file <- "/home/cjyoung42/G2_TestData/orthofinder_results/Results_Dec10/Species_Tree/SpeciesTree_rooted.txt"
+meta_file <- "/home/cjyoung42/G2_TestData/xylella_ids.csv"
+
+# read tree
+t <- read.tree(tree_file)
+
+# read metadata
+meta <- read.csv(meta_file, stringsAsFactors = FALSE)
+
+
+strip_duplicate_id <- function(x) {
+  n <- nchar(x)
+  substr(x, 1, n / 2)
+}
+tip_df <- data.frame(label = t$tip.label) %>%
+  mutate(sample_id = strip_duplicate_id(label))
+
+#combine metadata to give samples unique labels
+tip_df <- tip_df %>%
+  left_join(meta, by = "sample_id") %>%
+  mutate(
+    pretty_label = paste(sample_id, subspecies, host, sep = "_")
+  )
+
+#visualize the default, uncolored tree
+ggtree(t_rooted) %<+% tip_df +
+  scale_x_continuous(expand = expansion(mult = c(0.01, 0.4))) +
+  geom_tiplab(aes(label = pretty_label), size = 2.5) +
+  theme_tree2()
+```
+Next, I added colors to the tree to make it easier to read. A mutate function is necessary to standardize the labels so that colors can be assigned; previously, I wanted labels to be either lowercase or uppercase but this creates problems for adding colors.
+
+```
+tip_df <- tip_df %>%
+  mutate(
+    subspecies = toupper(trimws(as.character(subspecies))),
+    subspecies = ifelse(is.na(subspecies), "UNKNOWN", subspecies)
+  )
+
+#build tree object first
+p <- ggtree(t_rooted) %<+% tip_df
+
+#add aesthetics next
+print(
+  p +
+    scale_x_continuous(expand = expansion(mult = c(0.01, 0.4))) +
+
+    geom_tiplab(
+      data = subset(p$data, isTip & subspecies == "UNKNOWN"),
+      aes(label = pretty_label),
+      geom = "label",
+      fill = "yellow",
+      color = "black",
+      label.size = 0,
+      size = 2.5
+    ) +
+
+    geom_tiplab(
+      aes(label = pretty_label, color = subspecies),
+      size = 2.5
+    ) +
+
+    scale_color_manual(values = c(
+      "TAIWANENSIS" = "forestgreen",
+      "FASTIDIOSA" = "steelblue",
+      "MULTIPLEX"  = "purple",
+      "UNKNOWN"    = "black"
+    )) +
+
+    theme_tree2() +
+    theme(legend.position = "none")
+)
 ```
