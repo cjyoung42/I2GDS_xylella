@@ -1,12 +1,28 @@
-# I2GDS_xylella
-This repo is for the I2GDS class individual project. This project runs BUSCO and OrthoFinder on Xylella protein sequences and assembles a phylogenetic tree in R.
+# I2GDS Xylella Ortholog Analysis 
+This repo is for the I2GDS class individual project. This project runs BUSCO and OrthoFinder on _Xylella_ protein sequences and assembles a phylogenetic tree using the R package ggtree. The input data for this pipeline is annotated sequences produced by Prokka, such as the outputs from the Linux portion of the Group 2 project accessible at https://github.com/LiLabAtVT/I2GDS2025/tree/main/Group2. A relatively small dataset of 47 _Xylella_ proteomes was selected to run the following steps quickly. A known _Xylella_ species was selected to be an "unknown" to be identified using phylogenetic inference as a practice task. 
 
+#### Linux workflow
+##### Step 1: Quality Control.
+Check the quality and completeness of Prokka proteome outputs (.faa files) using **BUSCO**
+##### Step 2: Orthology Inference.
+Identify orthologroups and generate a species tree using **OrthoFinder**
+#### R workflow
+##### Step 3: Generate Tree
+Generate a visually appealing phylogenetic tree figure with **ggtree** based on OrthoFinder's species tree.
+Scripts and image files are available in the files section of this repo.
+
+
+## Step 1. Quality Control in BUSCO
+**1.1**
+First, an environment must be created to install the package BUSCO and all its dependencies. 
 ```
 module load Miniconda3
 conda create -n 
 busco-env -c conda-forge -c bioconda busco
 source activate busco-env
 ```
+**1.2**
+The following slurm batch script checks the annotated Prokka .faa files against the bacterial BUSCO lineage for proteome completeness.
 ```
 #!/bin/bash
 #SBATCH --job-name=busco_proteins
@@ -23,18 +39,18 @@ set -euo pipefail
 
 echo "=== BUSCO protein mode batch started at $(date) ==="
 
-# Load conda
+#Load conda. This script won't run unless conda is specifically used.
 module load Miniconda3
 source $(conda info --base)/etc/profile.d/conda.sh
 conda activate busco-env
 
-# Directories
+#Set directories, input annotations and output QC.
 ANNOT_DIR="./annotations"
 OUT_BASE="./busco_proteins"
 
 mkdir -p "$OUT_BASE" logs
 
-# Loop over all .faa files (each inside its own directory)
+#Loop over all .faa files (each inside its own directory).
 for FAA in ${ANNOT_DIR}/*/*.faa; do
     SAMPLE=$(basename "${FAA}" .faa)
     OUT_DIR="${OUT_BASE}/${SAMPLE}"
@@ -46,6 +62,9 @@ for FAA in ${ANNOT_DIR}/*/*.faa; do
     echo "Input:   ${FAA}"
     echo "Output:  ${OUT_DIR}"
     echo "----------------------------------------------"
+
+#BUSCO should still run if BUSCO dataset bacteria_odb10 has not been manually downloaded.
+#If this part gives an error, try busco --download bacteria_odb10 to download that dataset manually.
 
     busco \
         -i "${FAA}" \
@@ -61,7 +80,7 @@ done
 
 echo "=== BUSCO batch complete at $(date)! ==="
 ```
-
+**1.3** Next, for ease of access, a csv file of BUSCO quality checks is made. This step is important if these aren't clean genomes/proteomes. Since they have already been filtered to some degree by Prokka, the results should all be good, which they are (completeness is nearly all 100%).
 ```
 #!/bin/bash
 #SBATCH --job-name=busco_summary
@@ -84,7 +103,7 @@ mkdir -p logs
 
 echo "sample,complete_percent,single_copy,duplicated,fragmented,missing,total_buscos" > "$OUTFILE"
 
-# Find BUSCO short summary files (v5 format)
+# Find BUSCO short summary files
 SUMMARIES=$(find "$BUSCO_DIR" -mindepth 2 -maxdepth 3 -name "short_summary*.txt")
 
 if [[ -z "$SUMMARIES" ]]; then
@@ -112,7 +131,8 @@ done
 echo "=== BUSCO summary complete ==="
 echo "CSV written to: ${OUTFILE}"
 ```
-
+## Step 2. OrthoFinder orthology inference
+**2.1** To prepare .faa files for OrthoFinder analysis, move them to a single folder using the following script **collect_faas.sh**. This script creates a new directory for OrthoFinder inputs and moves the .faa files there.
 ```
 #!/bin/bash
 set -euo pipefail
@@ -150,7 +170,7 @@ echo "  $TARGET_DIR"
 ```
 bash collect_faas.sh
 ```
-
+**2.2** Data cleaning is necessary to make the file names and contents more readable. Since the files contain unecessary _prokka endings in their names, and the headers of the protein sequences within the files also contain names that are too long, the following script renames things so that they are less confusing.
 ```
 #!/bin/bash
 set -euo pipefail
@@ -246,18 +266,62 @@ echo "You can now run OrthoFinder on: $OUT_DIR"
 ```
 bash clean_headers.sh
 ```
-
+**2.3** Install OrthoFinder and its dependencies using an environment. **Note**: Some packages, like OrthoFinder, need to have all their dependencies listed out during install on the ARC. Trying to create an OrthoFinder environment without listing all dependencies didn't work and gave errors. 
 ```
-conda remove -n orthofinder-env --all -y
-
 conda create -n orthofinder-env -y \
     -c bioconda -c conda-forge \
     orthofinder scikit-learn diamond mafft blast fasttree
 
 source activate orthofinder-env
 ```
+**2.4** Run OrthoFinder in a slurm batch script.
+```
+#!/bin/bash
+#SBATCH --job-name=orthofinder
+#SBATCH --output=logs/orthofinder_%j.out
+#SBATCH --error=logs/orthofinder_%j.err
+#SBATCH --time=48:00:00
+#SBATCH --cpus-per-task=24
+#SBATCH --mem=120G
+#SBATCH --partition=normal_q
+#SBATCH --account=introtogds
+#SBATCH --mail-type=END,FAIL
 
-Begin R portion of project. We must first load our data and create some preliminary trees.
+set -euo pipefail
+
+echo "=== Starting OrthoFinder at $(date) ==="
+
+# Load conda
+module load Miniconda3
+source $(conda info --base)/etc/profile.d/conda.sh
+conda activate orthofinder-env
+
+# Input directory with cleaned FASTA files
+INPUT_DIR="./orthofinder_input_clean"
+
+# Output directory
+OUTPUT_DIR="./orthofinder_results"
+mkdir -p logs
+
+echo "Input directory:  $INPUT_DIR"
+echo "Output directory: $OUTPUT_DIR"
+echo
+
+# --- Run OrthoFinder ---
+orthofinder \
+    -f "$INPUT_DIR" \
+    -o "$OUTPUT_DIR" \
+    -t "$SLURM_CPUS_PER_TASK" \
+    -a "$SLURM_CPUS_PER_TASK" \
+    -M msa \
+    -S diamond_ultra_sens \
+    -T fasttree
+
+echo
+echo "=== OrthoFinder completed at $(date) ==="
+```
+## Step 3. Figure generation in R. 
+**3.1** First, load data data and create some preliminary trees to check if they are structured properly. Due to long branch attraction, the outgroup _Xylella taiwanensis_ places in between _X. fastidiosa fastidiosa_ and _X. f. muliplex_ clades. Therefore, the tree must be rooted manually on _Xylella taiwanensis_.
 ```
 library(ape)
 library(ggtree)
@@ -274,6 +338,7 @@ t_rooted <- root(
   resolve.root = TRUE)
 
 ```
+**3.2** Although the tree looks alright, it is difficult to interpret with only the accession codes as names for each sample. The labels on the plot must be renamed so that they display the correct species/subspecies and also the host, in order to infer lineages. A metadata file, **xylella_ids**, is needed to rename the labels.
 ```
 library(ape)
 library(ggtree)
@@ -311,7 +376,7 @@ ggtree(t_rooted) %<+% tip_df +
   geom_tiplab(aes(label = pretty_label), size = 2.5) +
   theme_tree2()
 ```
-Next, I added colors to the tree to make it easier to read. A mutate function is necessary to standardize the labels so that colors can be assigned; previously, I wanted labels to be either lowercase or uppercase but this creates problems for adding colors.
+**3.3** Next, I added colors to the tree to make it easier to read. A mutate function is necessary to standardize the labels so that colors can be assigned; previously, I wanted labels to be either lowercase or uppercase (to display the "UNKNOWN" sample) but this creates problems for adding colors. **Note**: ggplots/trees are very complicated to edit in R without breaking them. Oftentimes, adding a single feature or changing one color leads to multiple other issues that need correction. Adding a colored rectangle behind one label in order to highlight it is particularly problematic, and led to many entirely unreadable plots. Therefore, make sure to build the tree as an object first, and then add the colors and other aesthetics in a separate line of code.
 
 ```
 tip_df <- tip_df %>%
