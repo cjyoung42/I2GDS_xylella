@@ -9,8 +9,9 @@ Identify orthologroups and generate a species tree using **OrthoFinder**
 #### R workflow
 ##### Step 3: Generate Tree
 Generate a phylogenetic tree figure with **ggtree** based on OrthoFinder's species tree. Manually root tree and edit aesthetics to make it visually pleasing.
+Below is the final result of this pipeline.
+<img width="445" height="669" alt="Screenshot 2025-12-16 at 10 34 22 PM" src="https://github.com/user-attachments/assets/718de075-eadb-4050-9755-2a90de5f2132" />
 Scripts and image files are available in the files section of this repo.
-
 <details>
   <summary>Click to expand script</summary>
 
