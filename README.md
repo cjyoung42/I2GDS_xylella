@@ -8,10 +8,16 @@ Check the quality and completeness of Prokka proteome outputs (.faa files) using
 Identify orthologroups and generate a species tree using **OrthoFinder**
 #### R workflow
 ##### Step 3: Generate Tree
-Generate a visually appealing phylogenetic tree figure with **ggtree** based on OrthoFinder's species tree.
+Generate a phylogenetic tree figure with **ggtree** based on OrthoFinder's species tree. Manually root tree and edit aesthetics to make it visually pleasing.
 Scripts and image files are available in the files section of this repo.
 
+<details>
+  <summary>Click to expand script</summary>
 
+```
+p
+```
+</details>
 ## Step 1. Quality Control in BUSCO
 **1.1**
 First, an environment must be created to install the package BUSCO and all its dependencies. 
@@ -23,6 +29,7 @@ source activate busco-env
 ```
 **1.2**
 The following slurm batch script checks the annotated Prokka .faa files against the bacterial BUSCO lineage for proteome completeness.
+
 ```
 #!/bin/bash
 #SBATCH --job-name=busco_proteins
@@ -80,6 +87,8 @@ done
 
 echo "=== BUSCO batch complete at $(date)! ==="
 ```
+
+
 **1.3** Next, for ease of access, a csv file of BUSCO quality checks is made. This step is important if these aren't clean genomes/proteomes. Since they have already been filtered to some degree by Prokka, the results should all be good, which they are (completeness is nearly all 100%).
 ```
 #!/bin/bash
@@ -417,5 +426,17 @@ print(
 
     theme_tree2() +
     theme(legend.position = "none")
+)
+```
+
+**3.4** Finally, save the plot as a .pdf using ggsave.
+```
+ggsave(
+  filename = "xylella_tree.pdf",
+  plot = last_plot(),
+  width = 8,
+  height = 12,
+  units = "in",
+  device = cairo_pdf
 )
 ```
