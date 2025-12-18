@@ -14,13 +14,7 @@ Below is the final result of this pipeline.
 <img width="445" height="669" alt="Screenshot 2025-12-16 at 10 34 22 PM" src="https://github.com/user-attachments/assets/718de075-eadb-4050-9755-2a90de5f2132" />
 
 Scripts and image files are available in the files section of this repo.
-<details>
-  <summary>Click to expand script</summary>
 
-```
-p
-```
-</details>
 ## Step 1. Quality Control in BUSCO
 **1.1**
 First, an environment must be created to install the package BUSCO and all its dependencies. 
