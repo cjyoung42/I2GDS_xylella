@@ -55,7 +55,7 @@ source $(conda info --base)/etc/profile.d/conda.sh
 conda activate busco-env
 
 #Set directories, input annotations and output QC.
-ANNOT_DIR="./annotations"
+ANNOT_DIR="./annotations" #CHANGE if necessary
 OUT_BASE="./busco_proteins"
 
 mkdir -p "$OUT_BASE" logs
@@ -150,7 +150,7 @@ echo "CSV written to: ${OUTFILE}"
 set -euo pipefail
 
 # Where your annotation folders are (Prokka, NCBI, etc.)
-SOURCE_DIR="./annotations"   # change if needed
+SOURCE_DIR="./annotations"   #CHANGE if necessary
 
 # Where you want to put all FAA files for OrthoFinder
 TARGET_DIR="./orthofinder_input"
@@ -189,13 +189,12 @@ set -euo pipefail
 
 # --- Configuration ---
 IN_DIR="./orthofinder_input"           # original files
-OUT_DIR="./orthofinder_input_clean2"   # cleaned files output
-PREVIEW_LINES=6                        # how many lines to show from one cleaned file for quick check
+OUT_DIR="./orthofinder_input_clean"    # cleaned files output
+PREVIEW_LINES=6                        # how many lines to show from one cleaned file during quick check
 # ----------------------
 
 mkdir -p "$OUT_DIR"
 
-# make sure patterns that don't match expand to nothing
 shopt -s nullglob
 
 echo "Input dir : $IN_DIR"
@@ -339,7 +338,7 @@ library(ape)
 library(ggtree)
 library(ggplot2)
 
-results_dir <- "/home/cjyoung42/G2_TestData/orthofinder_results/Results_Dec10"
+results_dir <- "YOUR_PATH_HERE/orthofinder_results/Results_Example" #CHANGE to your path
 tree_file <- file.path(results_dir, "Species_Tree", "SpeciesTree_rooted.txt")
 t <- read.tree(tree_file)
 
@@ -358,8 +357,8 @@ library(dplyr)
 library(stringr)
 
 # set paths
-tree_file <- "/home/cjyoung42/G2_TestData/orthofinder_results/Results_Dec10/Species_Tree/SpeciesTree_rooted.txt"
-meta_file <- "/home/cjyoung42/G2_TestData/xylella_ids.csv"
+tree_file <- "YOUR_PATH_HERE/orthofinder_results/Species_Tree/SpeciesTree_rooted.txt"
+meta_file <- "YOUR_PATH_HERE/xylella_ids.csv"
 
 # read tree
 t <- read.tree(tree_file)
@@ -443,3 +442,7 @@ ggsave(
   device = cairo_pdf
 )
 ```
+<img width="445" height="669" alt="Screenshot 2025-12-16 at 10 34 22 PM" src="https://github.com/user-attachments/assets/718de075-eadb-4050-9755-2a90de5f2132" />
+
+## Results
+This figure is a rooted phylogenetic tree showing relationships among sampled _Xylella_ spp. isolates, with tip labels colored by species/subspecies designation. Tips are labeled with sample identifiers and colored according to subspecies assignment: _X. taiwanensis_ (green), _X. f. fastidiosa_ (blue), and _X. f. multiplex_ (purple), while a sample lacking a confident subspecies designation is shown in black. Tips corresponding to unknown subspecies are additionally highlighted with a yellow background to emphasize their placement within the tree. The topology illustrates the phylogenetic structure of the dataset and the degree to which subspecies assignments correspond to distinct clades and allows identification of the unknown strain as _Xylella fastidiosa fastidiosa_. Additionally, host-specific clades within _fastidiosa_ form, with grape-infecting strains clustering apart from almond-infecting strains.
