@@ -1,5 +1,5 @@
 # I2GDS Xylella Ortholog Analysis 
-This repo is for the I2GDS class individual project. This project runs BUSCO and OrthoFinder on _Xylella_ protein sequences and assembles a phylogenetic tree using the R package ggtree. The input data for this pipeline is annotated sequences produced by Prokka, such as the outputs from the Linux portion of the Group 2 project; for previous steps in this pipeline, consult https://github.com/LiLabAtVT/I2GDS2025/tree/main/Group2. Input data for this project can be accessed on the arc at /projects/intro2gds/I2GDS2025/G2_PlantDisease/Carter/annotations. A relatively small dataset of 47 _Xylella_ proteomes was selected to run the following steps quickly. A known _Xylella_ species was selected to be an "unknown" to be identified using phylogenetic inference as a practice task. 
+This repo is for the I2GDS class individual project. This project runs BUSCO and OrthoFinder on _Xylella_ protein sequences and assembles a phylogenetic tree using the R package ggtree. The input data for this pipeline is annotated sequences produced by Prokka, such as the outputs from the Linux portion of the Group 2 project; for previous steps in this pipeline, consult https://github.com/LiLabAtVT/I2GDS2025/tree/main/Group2. Input data for this project can be accessed on the arc at /projects/intro2gds/I2GDS2025/G2_PlantDisease/Carter/annotations. Scripts and image files are available in the files section of this repo. A relatively small dataset of 47 _Xylella_ proteomes was selected to run the following steps quickly. A known _Xylella_ species was selected to be an "unknown" to be identified using phylogenetic inference as a practice task. 
 
 #### Linux workflow
 ##### Step 1: Quality Control.
@@ -13,7 +13,7 @@ Below is the final result of this pipeline.
 
 <img width="445" height="669" alt="Screenshot 2025-12-16 at 10 34 22 PM" src="https://github.com/user-attachments/assets/718de075-eadb-4050-9755-2a90de5f2132" />
 
-Scripts and image files are available in the files section of this repo.
+
 
 ## Step 1. Quality Control in BUSCO
 **1.1**
